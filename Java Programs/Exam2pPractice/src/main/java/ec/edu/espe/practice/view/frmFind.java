@@ -4,17 +4,49 @@
  */
 package ec.edu.espe.practice.view;
 
+import com.mongodb.MongoException;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
+import com.mongodb.client.MongoDatabase;
+import java.util.ArrayList;
+import java.util.Scanner;
+import javax.swing.table.DefaultTableModel;
+import org.bson.Document;
+
 /**
  *
  * @author Juan Pablo Pinza, Search Engine Bandits, DCCO-ESPE
  */
 public class frmFind extends javax.swing.JFrame {
 
+    private static final String uri = "mongodb+srv://pinza:153@pinzadatabase.yy2byr4.mongodb.net/?retryWrites=true&w=majority";
+    private static final Scanner scan = new Scanner(System.in);
+    private static final String collection = "Computer";
+    private static final String databaseName = "exam";
+
     /**
      * Creates new form frmFind
      */
-    public frmFind() {
+    DefaultTableModel tabla = new DefaultTableModel() {
+        @Override
+        public boolean isCellEditable(int row, int column) {
+            return false;
+        }
+    };
+    
+    
+
+    public frmFind() {        
         initComponents();
+        tabla.addColumn("id");
+        tabla.addColumn("ID");
+        tabla.addColumn("Year");
+        tabla.addColumn("Brand");
+        tabla.addColumn("Price");
+        tabla.addColumn("Stock");
+        jTable1.setModel(tabla);
     }
 
     /**
@@ -29,8 +61,7 @@ public class frmFind extends javax.swing.JFrame {
         jPanel1 = new javax.swing.JPanel();
         jLabel2 = new javax.swing.JLabel();
         lblWarning = new javax.swing.JLabel();
-        txtID = new javax.swing.JTextField();
-        btnRead = new javax.swing.JButton();
+        btnFind = new javax.swing.JButton();
         jScrollPane1 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
 
@@ -38,9 +69,14 @@ public class frmFind extends javax.swing.JFrame {
 
         jLabel2.setText("Find Computer");
 
-        lblWarning.setText("Please, enter the ID to find the Computer");
+        lblWarning.setText("Click the Button to find all the data");
 
-        btnRead.setText("Find");
+        btnFind.setText("Find");
+        btnFind.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnFindActionPerformed(evt);
+            }
+        });
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -59,23 +95,17 @@ public class frmFind extends javax.swing.JFrame {
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addGap(11, 11, 11)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(btnFind)
                     .addComponent(lblWarning)
                     .addComponent(jLabel2))
                 .addGap(156, 156, 156))
-            .addGroup(jPanel1Layout.createSequentialGroup()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(126, 126, 126)
-                        .addComponent(txtID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addGap(39, 39, 39)
-                        .addComponent(btnRead))
-                    .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGap(11, 11, 11)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 375, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -84,11 +114,9 @@ public class frmFind extends javax.swing.JFrame {
                 .addComponent(jLabel2)
                 .addGap(36, 36, 36)
                 .addComponent(lblWarning)
-                .addGap(26, 26, 26)
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnRead))
-                .addGap(5, 5, 5)
+                .addGap(25, 25, 25)
+                .addComponent(btnFind)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 275, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
@@ -112,6 +140,10 @@ public class frmFind extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnFindActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnFindActionPerformed
+        showData();
+    }//GEN-LAST:event_btnFindActionPerformed
 
     /**
      * @param args the command line arguments
@@ -148,13 +180,36 @@ public class frmFind extends javax.swing.JFrame {
         });
     }
 
+    public void showData() {
+        try ( MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase(databaseName);
+            try {
+                System.out.println("Connected successfully to server.");
+                MongoCollection<Document> productCollection = database.getCollection(collection);
+
+                MongoCursor<Document> consult = productCollection.find().iterator();
+                int total = tabla.getRowCount();
+                for (int i = 0; i < total; i++) {
+                    tabla.removeRow(0);
+                }
+                while (consult.hasNext()) {
+                    ArrayList<Object> doc = new ArrayList<Object>(consult.next().values());
+                    tabla.addRow(doc.toArray());
+                }
+
+            } catch (MongoException me) {
+                System.out.println("An error occurred while attempting to connect: " + me);
+            }
+
+        }
+    }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton btnRead;
+    private javax.swing.JButton btnFind;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTable jTable1;
     private javax.swing.JLabel lblWarning;
-    private javax.swing.JTextField txtID;
     // End of variables declaration//GEN-END:variables
 }

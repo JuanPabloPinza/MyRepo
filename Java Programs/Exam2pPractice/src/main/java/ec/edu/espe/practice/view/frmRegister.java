@@ -26,6 +26,7 @@ public class frmRegister extends javax.swing.JFrame {
     private static final String uri = "mongodb+srv://pinza:153@pinzadatabase.yy2byr4.mongodb.net/?retryWrites=true&w=majority";
     private static final Scanner scan = new Scanner(System.in);
     private static final String collection = "Computer";
+    private static final String databaseName = "exam";
 
     /**
      * Creates new form frmRead

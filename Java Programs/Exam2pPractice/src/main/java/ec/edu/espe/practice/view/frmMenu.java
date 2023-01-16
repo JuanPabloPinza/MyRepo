@@ -39,6 +39,11 @@ public class frmMenu extends javax.swing.JFrame {
         lblMenu.setText("Computers");
 
         btnRead.setText("Read");
+        btnRead.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnReadActionPerformed(evt);
+            }
+        });
 
         btnFind.setText("Find");
 
@@ -95,6 +100,11 @@ public class frmMenu extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
+
+    private void btnReadActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnReadActionPerformed
+        frmFind open = new frmFind();
+        open.setVisible(true);
+        this.dispose();    }//GEN-LAST:event_btnReadActionPerformed
 
     /**
      * @param args the command line arguments

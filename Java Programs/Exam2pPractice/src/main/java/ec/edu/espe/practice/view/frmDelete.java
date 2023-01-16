@@ -4,13 +4,28 @@
  */
 package ec.edu.espe.practice.view;
 
+import com.google.gson.Gson;
+import com.mongodb.MongoException;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
+import java.util.Scanner;
 import javax.swing.JOptionPane;
+import org.bson.Document;
+import org.bson.conversions.Bson;
 
 /**
  *
  * @author Juan Pablo Pinza, Search Engine Bandits, DCCO-ESPE
  */
 public class frmDelete extends javax.swing.JFrame {
+
+    private static final String uri = "mongodb+srv://pinza:153@pinzadatabase.yy2byr4.mongodb.net/?retryWrites=true&w=majority";
+    private static final Scanner scan = new Scanner(System.in);
+    private static final String collection = "Computer";
+    private static final String databaseName = "exam";
 
     /**
      * Creates new form frmDelete
@@ -30,7 +45,7 @@ public class frmDelete extends javax.swing.JFrame {
 
         jLabel1 = new javax.swing.JLabel();
         jLabel2 = new javax.swing.JLabel();
-        jButton1 = new javax.swing.JButton();
+        btnDelete = new javax.swing.JButton();
         txtID = new javax.swing.JTextField();
         jLabel3 = new javax.swing.JLabel();
 
@@ -40,10 +55,15 @@ public class frmDelete extends javax.swing.JFrame {
 
         jLabel2.setText("Please, enter the ID of the Computer you want to delete:");
 
-        jButton1.setText("Delete");
-        jButton1.addMouseListener(new java.awt.event.MouseAdapter() {
+        btnDelete.setText("Delete");
+        btnDelete.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                jButton1MouseClicked(evt);
+                btnDeleteMouseClicked(evt);
+            }
+        });
+        btnDelete.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnDeleteActionPerformed(evt);
             }
         });
 
@@ -64,11 +84,12 @@ public class frmDelete extends javax.swing.JFrame {
                     .addGroup(layout.createSequentialGroup()
                         .addGap(63, 63, 63)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                            .addComponent(jButton1)
+                            .addComponent(btnDelete)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(jLabel3)
                                 .addGap(57, 57, 57)
-                                .addComponent(txtID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))))
+                                .addComponent(txtID, javax.swing.GroupLayout.PREFERRED_SIZE, 84, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addGap(99, 99, 99)))))
                 .addContainerGap(83, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -83,16 +104,43 @@ public class frmDelete extends javax.swing.JFrame {
                     .addComponent(txtID, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(jLabel3))
                 .addGap(55, 55, 55)
-                .addComponent(jButton1)
+                .addComponent(btnDelete)
                 .addContainerGap(74, Short.MAX_VALUE))
         );
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
 
-    private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
-     JOptionPane.showMessageDialog(null,"The Computer was deletes successfully");
-    }//GEN-LAST:event_jButton1MouseClicked
+    private void btnDeleteMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_btnDeleteMouseClicked
+        JOptionPane.showMessageDialog(null, "The Computer was deletes successfully");
+    }//GEN-LAST:event_btnDeleteMouseClicked
+
+    private void btnDeleteActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDeleteActionPerformed
+        String document = "";
+        Gson gson = new Gson();
+
+        try ( MongoClient mongoClient = MongoClients.create(uri)) {
+            MongoDatabase database = mongoClient.getDatabase(databaseName);
+            try {
+                System.out.println("Connected successfully to server.");
+                MongoCollection<Document> productCollection = database.getCollection(collection);
+
+                Bson filter = Filters.eq("id", Integer.parseInt(txtID.getText()));
+                Document query = productCollection.find(Filters.and(filter)).first();
+
+                if (query != null) {
+                    productCollection.deleteOne(filter);
+                    JOptionPane.showMessageDialog(this, "Computer deleted succesfully", "Delete Product", JOptionPane.INFORMATION_MESSAGE);
+                } else if (query == null) {
+                    JOptionPane.showMessageDialog(this, "Id not found", "Warning on input data", JOptionPane.WARNING_MESSAGE);
+                }
+
+            } catch (MongoException me) {
+                System.out.println("An error occurred while attempting to connect: " + me);
+            }
+
+        }
+    }//GEN-LAST:event_btnDeleteActionPerformed
 
     /**
      * @param args the command line arguments
@@ -130,7 +178,7 @@ public class frmDelete extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton jButton1;
+    private javax.swing.JButton btnDelete;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
